@@ -74,7 +74,6 @@ describe("reviewer", () => {
   const reviewOptions: ReviewOptions = {
     tokenLimit: 1234,
     changesThreshold: "error",
-    reasoningEffort: "low",
     commitLimit: 10,
     base: "base-sha",
     head: "head-sha",
@@ -89,9 +88,6 @@ describe("reviewer", () => {
 
   const mockedAzureService = new AzureOpenAIService({
     apiKey: "test-key",
-    apiVersion: "test-version",
-    deployment: "test-deployment",
-    endpoint: "test-endpoint",
   });
 
   beforeEach(() => {

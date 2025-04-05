@@ -26,10 +26,7 @@ jobs:
       - name: Run AI Reviewer
         uses: propstreet/reviewer@v2
         with:
-          azureOpenAIKey: ${{ secrets.AZURE_OPENAI_API_KEY }}
-          azureOpenAIEndpoint: ${{ secrets.AZURE_OPENAI_REASONING_ENDPOINT }}
-          azureOpenAIDeployment: ${{ secrets.AZURE_OPENAI_REASONING_DEPLOYMENT }}
-          azureOpenAIVersion: ${{ secrets.AZURE_OPENAI_REASONING_VERSION }}
+          openAIKey: ${{ secrets.OPENAI_API_KEY }}
         env:
           # Make sure GITHUB_TOKEN has write permissions to create reviews
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

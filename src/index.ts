@@ -2,14 +2,10 @@ import * as core from "@actions/core";
 import * as github from "@actions/github";
 import {
   isValidSeverityLevel,
-  isValidReasoningEffort,
   isValidTokenLimit,
   isValidExcludePatterns,
   isValidCommitLimit,
-  isValidAzureEndpoint,
-  isValidAzureDeployment,
-  isValidAzureApiKey,
-  isValidAzureApiVersion,
+  isValidOpenAIApiKey,
 } from "./validators.js";
 import { ReviewService } from "./reviewer.js";
 import { GitHubService } from "./githubService.js";
@@ -30,12 +26,6 @@ export async function run(): Promise<void> {
     const changesThreshold = core.getInput("severity") || "error";
     if (!isValidSeverityLevel(changesThreshold)) {
       core.setFailed(`Invalid severity: ${changesThreshold}`);
-      return;
-    }
-
-    const reasoningEffort = core.getInput("reasoningEffort") || "medium";
-    if (!isValidReasoningEffort(reasoningEffort)) {
-      core.setFailed(`Invalid reasoning effort: ${reasoningEffort}`);
       return;
     }
 
@@ -60,33 +50,12 @@ export async function run(): Promise<void> {
     }
 
     // Validate Azure-related inputs
-    const azureOpenAIEndpoint = core.getInput("azureOpenAIEndpoint");
-    if (!isValidAzureEndpoint(azureOpenAIEndpoint)) {
-      core.setFailed(`Invalid Azure OpenAI endpoint: ${azureOpenAIEndpoint}`);
+    const openAIKey = core.getInput("openAIKey");
+    if (!isValidOpenAIApiKey(openAIKey)) {
+      core.setFailed("Invalid OpenAI API key");
       return;
     }
-
-    const azureOpenAIDeployment = core.getInput("azureOpenAIDeployment");
-    if (!isValidAzureDeployment(azureOpenAIDeployment)) {
-      core.setFailed(
-        `Invalid Azure OpenAI deployment: ${azureOpenAIDeployment}`
-      );
-      return;
-    }
-
-    const azureOpenAIKey = core.getInput("azureOpenAIKey");
-    if (!isValidAzureApiKey(azureOpenAIKey)) {
-      core.setFailed("Invalid Azure OpenAI API key");
-      return;
-    }
-    core.setSecret(azureOpenAIKey); // Treat the API key as a secret
-
-    const azureOpenAIVersion =
-      core.getInput("azureOpenAIVersion") || "2024-12-01-preview";
-    if (!isValidAzureApiVersion(azureOpenAIVersion)) {
-      core.setFailed(`Invalid Azure OpenAI API version: ${azureOpenAIVersion}`);
-      return;
-    }
+    core.setSecret(openAIKey); // Treat the API key as a secret
 
     // Check the pull_request event in the payload
     const action = github.context.payload.action;
@@ -118,10 +87,7 @@ export async function run(): Promise<void> {
     });
 
     const azureService = new AzureOpenAIService({
-      endpoint: azureOpenAIEndpoint,
-      deployment: azureOpenAIDeployment,
-      apiKey: azureOpenAIKey,
-      apiVersion: azureOpenAIVersion,
+      apiKey: openAIKey,
     });
 
     // 2. Run Reviewer
@@ -131,7 +97,6 @@ export async function run(): Promise<void> {
       head,
       tokenLimit,
       changesThreshold,
-      reasoningEffort,
       commitLimit,
       excludePatterns,
     });

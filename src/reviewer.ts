@@ -2,10 +2,7 @@ import * as core from "@actions/core";
 import { SeverityLevel } from "./validators.js";
 import { minimatch } from "minimatch";
 import { isWithinTokenLimit } from "gpt-tokenizer/encoding/o200k_base";
-import {
-  AzureOpenAIService,
-  type ReasoningEffort,
-} from "./azureOpenAIService.js";
+import { AzureOpenAIService } from "./azureOpenAIService.js";
 import { CommitDetails, GitHubService, PatchInfo } from "./githubService.js";
 
 export type ReviewOptions = {
@@ -13,7 +10,6 @@ export type ReviewOptions = {
   head: string;
   tokenLimit: number;
   changesThreshold: SeverityLevel;
-  reasoningEffort: ReasoningEffort;
   commitLimit: number;
   excludePatterns?: string[];
 };
@@ -212,9 +208,7 @@ export class ReviewService {
 
     core.info("Calling Azure OpenAI...");
 
-    const response = await this.azureService.runReviewPrompt(pr.prompt, {
-      reasoningEffort: options.reasoningEffort,
-    });
+    const response = await this.azureService.runReviewPrompt(pr.prompt);
 
     if (!response?.comments || response.comments.length === 0) {
       core.info("No suggestions from AI.");

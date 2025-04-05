@@ -1,6 +1,6 @@
 import {
   AzureOpenAIService,
-  type AzureOpenAIConfig,
+  type OpenAIConfig,
   type ReviewPromptConfig,
 } from "./azureOpenAIService.js";
 import { AzureOpenAI } from "openai";
@@ -18,16 +18,9 @@ vi.mock("openai", () => ({
   })),
 }));
 
-describe("AzureOpenAIService", () => {
-  const mockConfig: AzureOpenAIConfig = {
-    endpoint: "https://AZURE_ENDPOINT",
-    deployment: "AZURE_DEPLOYMENT",
-    apiKey: "AZURE_API_KEY",
-    apiVersion: "2024-12-01-preview",
-  };
-
-  const mockReviewConfig: ReviewPromptConfig = {
-    reasoningEffort: "medium",
+describe("OpenAIService", () => {
+  const mockConfig: OpenAIConfig = {
+    apiKey: "OPENAI_API_KEY",
   };
 
   const mockInput =
@@ -80,7 +73,7 @@ describe("AzureOpenAIService", () => {
     (service as unknown as MockClient).client.beta.chat.completions.parse =
       parseMock;
 
-    const result = await service.runReviewPrompt(mockInput, mockReviewConfig);
+    const result = await service.runReviewPrompt(mockInput);
 
     const expectedSchema = {
       json_schema: {
@@ -156,7 +149,6 @@ describe("AzureOpenAIService", () => {
         }),
       ]),
       response_format: expectedSchema,
-      reasoning_effort: mockReviewConfig.reasoningEffort,
     });
     expect(result).toEqual(mockResponse.choices[0].message.parsed);
   });
@@ -190,7 +182,7 @@ describe("AzureOpenAIService", () => {
       parseMock;
 
     await expect(
-      service.runReviewPrompt(mockInput, mockReviewConfig)
+      service.runReviewPrompt(mockInput)
     ).rejects.toThrow("Review request did not finish, got length");
   });
 });

@@ -1,12 +1,9 @@
-import { AzureOpenAI } from "openai";
+import { OpenAI } from "openai"
 import { zodResponseFormat } from "openai/helpers/zod";
 import { CodeReviewCommentArray } from "./schemas.js";
 
-export interface AzureOpenAIConfig {
-  endpoint: string;
-  deployment: string;
+export interface OpenAIConfig {
   apiKey: string;
-  apiVersion: string;
 }
 
 export type ReasoningEffort = "low" | "medium" | "high";
@@ -16,25 +13,22 @@ export interface ReviewPromptConfig {
 }
 
 export class AzureOpenAIService {
-  private client: AzureOpenAI;
+  private client: OpenAI;
 
-  constructor(config: AzureOpenAIConfig) {
-    this.client = new AzureOpenAI({
-      endpoint: config.endpoint,
-      deployment: config.deployment,
-      apiKey: config.apiKey,
-      apiVersion: config.apiVersion,
-    });
+  constructor(config: OpenAIConfig) {
+    // Create a configuration using the official OpenAI library
+    this.client = new OpenAI({apiKey: config.apiKey});
   }
 
-  async runReviewPrompt(prompt: string, config: ReviewPromptConfig) {
-    const completion = await this.client.beta.chat.completions.parse({
-      model: "",
+  async runReviewPrompt(prompt: string) {
+   
+    const completion = await this.client.chat.completions.create({
+      model: "o1", // The model name you requested
       messages: [
         {
           role: "developer",
           content: `You are a helpful code reviewer. Review this pull request and provide any suggestions.
-Each comment must include the associated commit sha, file, line, side and severity: 'info', 'warning', or 'error'.
+Each comment must include the associated commit sha, file, line, side, and severity: 'info', 'warning', or 'error'.
 Only comment on lines that need improvement. Comments may be formatted as markdown.
 If you have no comments, return an empty comments array. Respond in JSON format.`,
         },
@@ -43,19 +37,20 @@ If you have no comments, return an empty comments array. Respond in JSON format.
           content: prompt,
         },
       ],
-      response_format: zodResponseFormat(
-        CodeReviewCommentArray,
-        "review_comments"
-      ),
-      reasoning_effort: config.reasoningEffort,
+      response_format: zodResponseFormat(CodeReviewCommentArray, "review_comments")
     });
 
-    if (completion.choices[0].finish_reason !== "stop") {
+    const choice = completion.choices[0];
+    if (choice.finish_reason !== "stop") {
       throw new Error(
-        `Review request did not finish, got ${completion.choices[0].finish_reason}`
+        `Review request did not finish, got ${choice.finish_reason}`
       );
     }
 
-    return completion.choices[0].message.parsed;
+    const rawContent = completion.choices[0].message?.content || "";
+
+    const obj = JSON.parse(rawContent);
+   
+    return obj
   }
 }
